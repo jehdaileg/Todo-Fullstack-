@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use App\Http\Resources\TaskResource;
+use App\Http\Requests\CreateTaskRequest;
 
 class TaskController
 {
@@ -15,18 +17,24 @@ class TaskController
      */
     public function index()
     {
-       return TaskResource::collection(Task::all()); 
+        return TaskResource::collection(Task::all());
     }
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store()
     {
-        //
+        $data = request()->validate([
+            'title' => ['required', 'string'],
+            'category_id' => ['filled', 'integer', Rule::exists('categories', 'id')]
+        ], request()->all());
+
+        $task = Task::query()->create($data);
+
+        return TaskResource::make(
+            $task->fresh()
+        );
     }
 
     /**
@@ -37,7 +45,7 @@ class TaskController
      */
     public function show(Task $task)
     {
-        //
+        return TaskResource::make($task);
     }
 
     /**

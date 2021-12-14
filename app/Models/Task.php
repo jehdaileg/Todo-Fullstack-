@@ -11,9 +11,7 @@ class Task extends Model
     use HasFactory;
 
     protected $casts = [
-
-        'done' => 'boolean'
-
+        'completed' => 'boolean',
     ];
 
     public function category()

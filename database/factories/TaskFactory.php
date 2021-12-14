@@ -17,7 +17,7 @@ class TaskFactory extends Factory
 
         return [
             //
-            'title' => $this->faker->name,
+            'title' => $this->faker->sentence(),
             'category_id' => Category::factory()
         ];
     }
