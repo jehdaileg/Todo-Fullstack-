@@ -17,6 +17,7 @@ class CategoryFactory extends Factory
             //
             'name' => $this->faker->name,
 
+
         ];
     }
 }

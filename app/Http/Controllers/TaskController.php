@@ -4,9 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use App\Http\Resources\TaskResource;
+use App\Http\Requests\CreateTaskRequest;
 
-class TaskController extends Controller
+class TaskController
 {
+
+    /*public function __construct()
+    {
+        $this->middleware('auth');
+
+    } */ //outsider
     /**
      * Display a listing of the resource.
      *
@@ -14,7 +23,9 @@ class TaskController extends Controller
      */
     public function index()
     {
-        //
+       return TaskResource::collection(Task::all());
+
+
     }
 
     /**
@@ -26,6 +37,33 @@ class TaskController extends Controller
     public function store(Request $request)
     {
         //
+
+
+
+        $data = request()->validate([
+            'title' => 'required|string',
+            'category_id' => ['filled', 'integer', Rule::exists('categories', 'id')]
+
+
+        ], request()->all());
+
+
+
+       // $task = Task::create($request->validated());
+
+    /*   $task = Task::create($data);
+
+       return TaskResource::make(
+           $task->fresh()
+
+       );  */
+
+       return TaskResource::make(
+
+        Task::query()->create($data)
+
+       );
+
     }
 
     /**
@@ -37,6 +75,13 @@ class TaskController extends Controller
     public function show(Task $task)
     {
         //
+
+        return TaskResource::make($task);
+
+
+        //return TaskResource::make($task);
+
+
     }
 
     /**
@@ -60,5 +105,17 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         //
+
+
+
+      return TaskResource::make(
+
+        tap($task)->delete()
+
+      );
+
+
+
+
     }
 }

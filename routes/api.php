@@ -17,7 +17,10 @@ use App\Http\Controllers\CategoryController;
 */
 
 
-Route::apiResource('/tasks', TaskController::class);
+Route::apiResource('/tasks', TaskController::class)->middleware('auth:sanctum');
 
-Route::apiResource('/categories', CategoryController::class)->only('index','store');
+Route::apiResource('/categories', CategoryController::class)->only('index','store')->middleware('auth:sanctum');
+
+
+//Route::get('/categories/show/{category}', [CategoryController::class, 'show'])->name('categories.show')->middleware('auth');
 
