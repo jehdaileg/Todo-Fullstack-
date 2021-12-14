@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TaskFactory extends Factory
@@ -13,8 +14,11 @@ class TaskFactory extends Factory
      */
     public function definition()
     {
+
         return [
             //
+            'title' => $this->faker->name,
+            'category_id' => Category::factory()
         ];
     }
 }
