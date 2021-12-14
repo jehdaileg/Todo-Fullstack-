@@ -18,7 +18,7 @@ class CreateTasksTable extends Migration
             $table->string('title');
             $table->boolean('done')->default(0);
             $table->integer('parent_id')->nullable();
-            $table->foreignId('category_id')->constrained();
+            $table->foreignId('category_id')->nullable()->constrained();
             $table->timestamps();
         });
     }
