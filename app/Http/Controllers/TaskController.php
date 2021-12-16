@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
-use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Resources\TaskResource;
-use App\Http\Requests\CreateTaskRequest;
+use Illuminate\Database\Query\Builder;
 
 class TaskController
 {
+
     /**
      * Display a listing of the resource.
      *
@@ -17,7 +17,14 @@ class TaskController
      */
     public function index()
     {
-        return TaskResource::collection(Task::all());
+        return TaskResource::collection(
+            Task::query()
+                ->when(request('completed'), fn (Builder $q) => $q->where('completed', true))
+                ->whereBelongsTo(auth()->user())
+                ->whereCompleted(false)
+                ->latest()
+                ->get()
+        );
     }
 
     /**
@@ -25,15 +32,21 @@ class TaskController
      */
     public function store()
     {
+        request()->user()->tokenCan('tasks.store');
+
         $data = request()->validate([
-            'title' => ['required', 'string'],
+            'title' => 'required|string',
             'category_id' => ['filled', 'integer', Rule::exists('categories', 'id')]
+
         ], request()->all());
 
-        $task = Task::query()->create($data);
+        $task = Task::create(
+            array_merge($data, ['user_id' => auth()->id()])
+        );
 
         return TaskResource::make(
             $task->fresh()
+
         );
     }
 
@@ -45,6 +58,8 @@ class TaskController
      */
     public function show(Task $task)
     {
+        request()->user()->tokenCan('tasks.show');
+
         return TaskResource::make($task);
     }
 
@@ -55,9 +70,19 @@ class TaskController
      * @param  \App\Models\Task  $task
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Task $task)
+    public function update(Task $task)
     {
-        //
+        request()->user()->tokenCan('tasks.update');
+
+        $data = request()->validate([
+            'title' => 'required|string',
+            'category_id' => ['filled', 'integer', Rule::exists('categories', 'id')]
+
+        ], request()->all());
+
+        TaskResource::make(
+            tap($task)->update($data)
+        );
     }
 
     /**
@@ -68,6 +93,10 @@ class TaskController
      */
     public function destroy(Task $task)
     {
-        //
+        request()->user()->tokenCan('tasks.destroy');
+
+        return TaskResource::make(
+            tap($task)->delete()
+        );
     }
 }
