@@ -2,83 +2,102 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use Tests\TestCase;
 use App\Models\Task;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 
 class TaskControllerTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+    use RefreshDatabase;
+    use WithFaker;
 
-    public function testUsersCanGetTasks(): void {
-        /**@var \Illuminate\Contracts\Auth\Authenticatable $user*/
-        $user = User::factory()->create();
-        Task::factory(3)->create();
+    const DEVICE_NAME = 'Samsung';
+
+    public function testUsersCanGetTasks(): void
+    {
         
-        $this->actingAs($user);
 
-        $res = $this->getJson(route('tasks.index'));
+        $user = User::factory()->create();
+        Task::factory(3)->for($user)->create();
+
+        $token = $user->createToken(self::DEVICE_NAME)->plainTextToken;
+
+        Sanctum::actingAs($user);
+
+        $res = $this->getJson(route('tasks.index'), [
+             'headers' => [
+                    'Authorization' => 'Bearer '. $token,
+                    'Accept' => 'application/json'
+                ]
+        ]);
 
         $res->assertOk();
         $res->assertJsonCount(3, 'data');
     }
 
     /**
+     *
      * @test
      */
-    public function usersCannotGetTasksIfTheyAreNotAuthentified(): void {
+    public function CannotGetTasksIfNotAuthenticated(): void
+    {
+        Task::factory(3)->create();
+
         $res = $this->getJson(route('tasks.index'));
 
         $res->assertUnauthorized();
     }
 
-    /**
-     * @test
-     */
-    public function usersCanShowATask(): void {
-        $task = Task::factory()->create();
-        /**@var \Illuminate\Contracts\Auth\Authenticatable $user*/
+    public function testUsersCanGetOneTask(): void
+    {
         $user = User::factory()->create();
 
-        $res = $this->actingAs($user)->getJson(
-            route('tasks.show', $task->id)
-        );
+        $task = Task::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $res = $this->getJson(route('tasks.show', $task->id));
 
         $res->assertOk();
-        $res->assertJsonPath('data.title', $task->title);
     }
 
-    /**
-     * @test
-     */
-    public function usersWillGetNotFoundIfATaskDoesNotExist(): void {
-        /**@var \Illuminate\Contracts\Auth\Authenticatable $user*/
+    public function testItWillReturnNotFoundIfATaskIdIsIncorrect(): void
+    {
         $user = User::factory()->create();
 
-        $res = $this->actingAs($user)->getJson(
-            route('tasks.show', 1)
-        );
+        Sanctum::actingAs($user);
+
+        $res = $this->getJson(route('tasks.show', 5000));
 
         $res->assertNotFound();
     }
 
-    /**
-     * @test
-     */
-    public function usersCanCreateATask(): void {
-        /**@var \Illuminate\Contracts\Auth\Authenticatable $user */
+    public function testUsersCanCreateTask(): void
+    {
         $user = User::factory()->create();
 
-      //  $this->withoutExceptionHandling();
+        Sanctum::actingAs($user);
 
-        $res = $this->actingAs($user)->postJson(
-            route('tasks.store', [
-                'title' => $this->faker->sentence()
-            ])
-        );
+        $res = $this->postJson(route('tasks.store', [
+            'title' => $this->faker->sentence(),
+        ]));
 
-        $res->dump();
+        $res->assertOk();
+    }
+
+    public function testUserCansDeleteTask(): void
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $task = Task::factory()->create();
+
+        $res = $this->delete(route('tasks.destroy', $task->id));
+
+        $res->assertOk();
     }
 }

@@ -1,23 +1,36 @@
 <?php
 
-use Illuminate\Http\Request;
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\CategoryController;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Support\Arr;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
+Route::post('/tokens/create', function () {
+    $data = validator()->validate(
+        [
+            'email' => ['required', 'email'],
+            'password' => ['required', 'min:8'],
+            'device_name' => ['required', 'string']
+        ],
+        request()->all()
+    );
 
+    throw_unless(
+        auth()->attempt(Arr::only($data, ['email', 'password'])),
+        new AuthenticationException('Unauthenticated')
+    );
 
-Route::apiResource('/tasks', TaskController::class)->middleware('auth');
+    $token = request()->user()->createToken($data['device_name'], [
+        'tasks.index','tasks.show','tasks.store',
+        'tasks.update',
+        'tasks.destroy',
+    ]);
 
-Route::apiResource('/categories', CategoryController::class)->only('index','store');
+    return response()->json(['token' => $token->plainTextToken]);
+});
 
+Route::apiResource('/tasks', TaskController::class)->middleware('auth:sanctum');
+
+Route::apiResource('/categories', CategoryController::class)->except('update', 'delete')->middleware('auth:sanctum');
