@@ -16,10 +16,9 @@ class TaskResource extends JsonResource
     public function toArray($request)
     {
         return  [
-
             'id' => $this->id,
             'title' => $this->title,
-            'done' => $this->done,
+            'completed' => $this->completed,
             'parent_id' => $this->parent_id,
             'category' => CategoryResource::make($this->category)
 
