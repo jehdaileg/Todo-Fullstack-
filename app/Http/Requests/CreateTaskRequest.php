@@ -2,8 +2,9 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
 
 class CreateTaskRequest extends FormRequest
 {
@@ -14,7 +15,9 @@ class CreateTaskRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+
+        return true;
+
     }
 
     /**
@@ -25,6 +28,7 @@ class CreateTaskRequest extends FormRequest
     public function rules()
     {
         return [
+
             //
 
             'title' => ['required', 'string'],

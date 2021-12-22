@@ -2,10 +2,11 @@
 
 namespace Tests\Feature\Http\Controllers;
 
-use App\Models\Category;
 use Tests\TestCase;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\Category;
+use Laravel\Sanctum\Sanctum;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -28,8 +29,47 @@ class TaskControllerTest extends TestCase
 
         $res = $this->getJson(route('tasks.index'));
 
+        //$res->assertUnauthorized();
+
         $res->assertOk();
-        $res->assertJsonCount(3, 'data');
+    }
+
+    public function testUsersCanGetOneTask(): void
+    {
+        $user = User::factory()->create();
+
+        $task = Task::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $res = $this->getJson(route('tasks.show', $task->id));
+
+       $res->assertOk();
+    }
+
+    public function testItWillReturnNotFoundIfATaskIdIsIncorrect(): void
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $res = $this->getJson(route('tasks.show', 5000));
+
+        $res->assertNotFound();
+    }
+
+
+    public function testUserCansDeleteTask(): void
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $task = Task::factory()->create();
+
+        $res = $this->delete(route('tasks.destroy', $task->id));
+
+        $res->assertOk();
     }
 
         /**
@@ -108,7 +148,7 @@ class TaskControllerTest extends TestCase
 
          // $res->dd();
 
-         $res->assertStatus(201);
+         $res->assertStatus(200);
 
   }
 
