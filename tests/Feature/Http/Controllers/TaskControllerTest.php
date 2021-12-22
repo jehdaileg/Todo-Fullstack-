@@ -14,8 +14,6 @@ class TaskControllerTest extends TestCase
     use RefreshDatabase;
     use WithFaker;
 
-    const DEVICE_NAME = 'Samsung';
-
     public function testUsersCanGetTasks(): void
     {
         
@@ -23,16 +21,11 @@ class TaskControllerTest extends TestCase
         $user = User::factory()->create();
         Task::factory(3)->for($user)->create();
 
-        $token = $user->createToken(self::DEVICE_NAME)->plainTextToken;
+        $token = $user->createToken('test')->plainTextToken;
 
         Sanctum::actingAs($user);
 
-        $res = $this->getJson(route('tasks.index'), [
-             'headers' => [
-                    'Authorization' => 'Bearer '. $token,
-                    'Accept' => 'application/json'
-                ]
-        ]);
+        $res = $this->getJson(route('tasks.index'));
 
         $res->assertOk();
         $res->assertJsonCount(3, 'data');
@@ -88,6 +81,8 @@ class TaskControllerTest extends TestCase
         $res->assertOk();
     }
 
+
+
     public function testUserCansDeleteTask(): void
     {
         $user = User::factory()->create();
@@ -96,8 +91,9 @@ class TaskControllerTest extends TestCase
 
         $task = Task::factory()->create();
 
-        $res = $this->delete(route('tasks.destroy', $task->id));
+        $res = $this->deleteJson(route('tasks.destroy', $task->id));
 
         $res->assertOk();
+
     }
 }
