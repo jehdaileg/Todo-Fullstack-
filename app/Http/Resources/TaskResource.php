@@ -20,7 +20,9 @@ class TaskResource extends JsonResource
             'title' => $this->title,
             'completed' => $this->completed,
             'parent_id' => $this->parent_id,
-            'category' => CategoryResource::make($this->category)
+            'category' => CategoryResource::make($this->whenLoaded('category')),
+            'user' => UserResource::make($this->whenLoaded('user'))
+
 
         ];
     }

@@ -11,9 +11,5 @@ use Illuminate\Support\Arr;
 
 Route::apiResource('/tasks', TaskController::class)->middleware('auth:sanctum');
 
-Route::apiResource('/categories', CategoryController::class)->only('index','store')->middleware('auth:sanctum');
+Route::apiResource('/categories', CategoryController::class)->middleware('auth:sanctum');
 
-
-//Route::get('/categories/show/{category}', [CategoryController::class, 'show'])->name('categories.show')->middleware('auth');
-
-Route::apiResource('/categories', CategoryController::class)->except('update', 'delete')->middleware('auth:sanctum');

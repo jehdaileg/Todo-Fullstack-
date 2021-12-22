@@ -24,4 +24,14 @@ class TaskFactory extends Factory
 
         ];
     }
+
+
+    /* for completed tasks */
+
+    public function completed()
+    {
+        return $this->state(['completed' => true]);
+    }
+
+
 }
