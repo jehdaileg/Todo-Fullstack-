@@ -16,6 +16,8 @@ class TaskControllerTest extends TestCase
 
     public function testUsersCanGetTasks(): void
     {
+        
+
         $user = User::factory()->create();
         Task::factory(3)->for($user)->create();
 
@@ -79,6 +81,8 @@ class TaskControllerTest extends TestCase
         $res->assertOk();
     }
 
+
+
     public function testUserCansDeleteTask(): void
     {
         $user = User::factory()->create();
@@ -87,8 +91,9 @@ class TaskControllerTest extends TestCase
 
         $task = Task::factory()->create();
 
-        $res = $this->delete(route('tasks.destroy', $task->id));
+        $res = $this->deleteJson(route('tasks.destroy', $task->id));
 
         $res->assertOk();
+
     }
 }
