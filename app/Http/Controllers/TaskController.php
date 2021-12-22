@@ -10,15 +10,8 @@ use Illuminate\Database\Query\Builder;
 class TaskController
 {
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        request()->user()->tokenCan('tasks.index');
-
         return TaskResource::collection(
             Task::query()
                 ->when(request('completed'), fn (Builder $q) => $q->where('completed', true))
@@ -43,7 +36,7 @@ class TaskController
         ], request()->all());
 
         $task = Task::create(
-            [...$data, 'user_id' => auth()->id()]
+            array_merge($data, ['user_id' => auth()->id()])
         );
 
         return TaskResource::make(
