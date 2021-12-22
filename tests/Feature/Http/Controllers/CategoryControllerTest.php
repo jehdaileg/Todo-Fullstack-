@@ -3,86 +3,123 @@
 namespace Tests\Feature\Http\Controllers;
 
 use Tests\TestCase;
+//use Illuminate\Foundation\Auth\User;
 use App\Models\User;
 use App\Models\Category;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 
 class CategoryControllerTest extends TestCase
 {
 
     use RefreshDatabase;
     use WithFaker;
+    /**
+     * A basic feature test example.
+     *
+     * @return void
+     */
 
-    public function testUsersCanFetchAllCategories(): void
-    {
+
+
+    public function testUsersCanGetCategoryHomeEndPointIndex() : void {
+
+        /**
+         * @var \Illuminate\Contracts\Auth\Authenticatable $user
+         */
         $user = User::factory()->create();
 
-        Sanctum::actingAs($user);
+        $this->actingAs($user);
 
-        Category::factory(5)->create();
+        $res = $this->get(url('/'));
 
-        $res = $this->getJson(route('categories.index'));
+        $res->assertStatus(200);
 
-        $res->assertOk();
     }
 
-    public function testUsersCannotFetchCategoriesIfNotAuthenticated(): void
-    {
+    public function testUsersCanFetchAllCategories() : void {
+        /**
+         * @var \Illuminate\Contracts\Auth\Authenticatable $user
+         */
+
+         $user = User::factory()->create();
+
+         $this->actingAs($user);
+
+         Category::factory(5)->create();
+
+         $res = $this->getJson(route('categories.index'));
+
+         $res->assertOk();
+
+         $res->dump();
+
+
+    }
+
+    public function testUserCannotFetchCategoriesIfHeIsNotAuth() : void {
 
         Category::factory(5)->create();
 
         $res = $this->getJson(route('categories.index'));
 
         $res->assertUnauthorized();
+
     }
 
-    public function testUserCanStoreCategoryInDatabase(): void
-    {
+    public function testUserCanStoreCategoryInDatabase() : void {
+          /**
+         * @var \Illuminate\Contracts\Auth\Authenticatable $user
+         */
 
-        $user = User::factory()->create();
+          $user = User::factory()->create();
 
-        Sanctum::actingAs($user);
+          $this->actingAs($user);
 
-        $res = $this->postJson(route('categories.store', [
-
-            'name' => $this->faker->word()
-
-        ]));
-
-        $res->assertOk();
-    }
-
-    public function testUserCannotStoreCategoryIfHeIsNotAuthenticated(): void
-    {
-
-        $response = $this->postJson(route('categories.store'), [
+          $res = $this->postJson(route('categories.store', [
 
             'name' => $this->faker->sentence()
 
-        ]);
+          ]));
 
-        $response->assertUnauthorized();
+          $res->assertOk();
+
+          //$res->dd();
+
+    }
+
+    public function testUserCannotStoreCategoryIfHeIsNotAuth() : void {
+
+       $response = $this->postJson(route('categories.store'), [
+
+        'name' => $this->faker->sentence()
+
+       ]);
+
+       $response->assertUnauthorized();
     }
 
 
-    public function testUserCanGetAspecificCategory(): void
-    {
-        $user = User::factory()->create();
+    public function testUserCanGetAspecificCategory() : void {
+          /**
+         * @var \Illuminate\Contracts\Auth\Authenticatable $user
+         */
 
-        Sanctum::actingAs($user);
+          $user = User::factory()->create();
 
-        $category = Category::factory()->create();
+          $this->actingAs($user);
 
-        $response = $this->getJson(route('categories.show', $category->id));
+          $category = Category::factory()->create();
 
-        $response->assertOk();
+          $response = $this->getJson(route('categories.show', $category->id));
+
+          $response->assertOk();
+
+
     }
 
-    public function testUserCannotGetAUnexistedCaetgory(): void
-    {
-        /**
+    public function testUserCannotGetAUnexistedCaetgory() : void {
+          /**
          * @var \Illuminate\Contracts\Auth\Authenticatable $user
          */
 
@@ -95,15 +132,19 @@ class CategoryControllerTest extends TestCase
         $response = $this->getJson(route('categories.show', 75588));
 
         $response->assertNotFound();
+
     }
 
-    public function testUserCannotGeAspecificCategoryIfNotAuthenticated(): void
-    {
+    public function testUserCannotGeAspecificCategoryIfNotAuth() : void {
 
         $category = Category::factory()->create();
 
         $response = $this->getJson(route('categories.show', $category->id));
 
         $response->assertUnauthorized();
+
     }
+
+
 }
+

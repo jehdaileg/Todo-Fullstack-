@@ -3,23 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Resources\TaskResource;
-use Illuminate\Database\Query\Builder;
+use App\Http\Requests\CreateTaskRequest;
 
 class TaskController
 {
-
     public function index()
     {
-        return TaskResource::collection(
-            Task::query()
-                ->when(request('completed'), fn (Builder $q) => $q->where('completed', true))
-                ->whereBelongsTo(auth()->user())
-                ->whereCompleted(false)
-                ->latest()
-                ->get()
-        );
+       return TaskResource::collection(Task::all());
     }
 
     /**
@@ -53,9 +46,9 @@ class TaskController
      */
     public function show(Task $task)
     {
-        request()->user()->tokenCan('tasks.show');
 
         return TaskResource::make($task);
+
     }
 
     /**
@@ -88,10 +81,15 @@ class TaskController
      */
     public function destroy(Task $task)
     {
-        request()->user()->tokenCan('tasks.destroy');
+      
+      return TaskResource::make(
 
-        return TaskResource::make(
-            tap($task)->delete()
-        );
+        tap($task)->delete()
+
+      );
+
+
+
+
     }
 }
