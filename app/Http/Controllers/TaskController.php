@@ -11,45 +11,40 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Http\Requests\CreateTaskRequest;
 use App\Http\Resources\CategoryResource;
 use Inertia\Inertia;
+use InvalidArgumentException;
 
 class TaskController
 {
 
     public function index()
     {
-      /*  return Inertia::render('Tasks/Index', [
-            'tasks' => Task::query()
-                ->with('category', 'user')
-                ->when(request('completed'), fn (Builder $q) => $q->where('completed', true))
-                ->whereCompleted(false)
-                ->whereBelongsTo(auth()->user())
-                ->latest()
-                ->get(['id', 'title', 'completed', 'created_at', 'category_id', 'user_id'])
-                ->map(fn ($task) => [
-
-                    'id' => $task->id,
-                    'title' => $task->title,
-                    'completed' => $task->completed,
-                    'category' => $task->category,
-                    'created_at' => $task->created_at,
-                    'user'=> $task->user
-                ])
-        ]);  */
 
         $tasks = Task::query()
-        ->whereCompleted(false)
         ->with('category')
-        ->when(request('completed'), fn (Builder $q) => $q->whereCompleted(), fn (Builder $q) => $q->whereCompleted(false))
-        ->when(request('categories'), fn (Builder $q) => $q
-            ->whereHas('category', function (Builder $q) {
-                return $q->whereIn('name', explode('+', request('categories')));
-            }))
-        ->whereBelongsTo(auth()->user())
+        ->when(request('category'), fn(Builder $builder) =>
+            $builder->whereRelation('category', 'name', request('category'))
+        )
+        ->when(request('statustask'), fn(Builder $builder) =>
+            match(request('statustask')){
+                'completed' => $builder->where('completed', true),
+                'uncompleted' => $builder->where('completed', false),
+                default => throw new InvalidArgumentException('Unsupported Status task')
+
+            }
+        )
+        ->where('user_id', auth()->id())
         ->latest()
-        ->get();
+        ->get()
+        ->transform(fn ($task) => [
+            'id' => $task->id,
+            'title' => $task->title,
+            'completed' => $task->completed,
+            'selected' => false,
+            'hovered' => false
+        ]);
 
         return Inertia::render('Tasks/Index', [
-            'tasks' => TaskResource::collection($tasks),
+            'tasks' => $tasks,
             'categories' => CategoryResource::collection(Category::all())
         ]);
 
@@ -111,19 +106,21 @@ class TaskController
      * @param  \App\Models\Task  $task
      * @return \Illuminate\Http\Response
      */
-    public function update(Task $task)
+    public static function update(Task $task)
     {
-        request()->user()->tokenCan('tasks.update');
+
+       /* tap($task)->update(['completed' => $task->completed ? false: true ]);
+
+        return back();  */
 
         $data = request()->validate([
-            'title' => 'required|string',
-            'category_id' => ['filled', 'integer', Rule::exists('categories', 'id')]
-
+            'title' => ['filled'],
+            'completed' => ['filled'],
         ], request()->all());
 
-        TaskResource::make(
-            tap($task)->update($data)
-        );
+        $task->update($data);
+
+        return back();
     }
 
     /**
@@ -134,14 +131,33 @@ class TaskController
      */
     public function destroy(Task $task)
     {
-        //
+        $task->delete();
+
+        return back();
+    }
+
+    public function completeAll()
+    {
+        $data = request()->validate([
+            'tasks' => ['array', 'filled'],
+            'tasks.*' => Rule::exists('tasks', 'id')
+        ], request()->all());
+
+        Task::query()->find($data['tasks'])->each(fn (Task $task) => $task->update(['completed' => true]));
+
+        return back();
+    }
+
+    public function deleteAll()
+    {
+        $data = request()->validate([
+            'tasks' => ['array', 'filled'],
+            'tasks.*' => Rule::exists('tasks', 'id')
+        ], request()->all());
 
 
+        Task::query()->find($data['tasks'])->each(fn(Task $task) => $task->delete());
 
-        return TaskResource::make(
-
-            tap($task)->delete()
-
-        );
+        return back();
     }
 }

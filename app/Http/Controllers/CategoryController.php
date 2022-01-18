@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use Illuminate\Contracts\Cache\Store;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class CategoryController
 {
@@ -15,11 +19,22 @@ class CategoryController
      */
     public function index()
     {
-        //
+        return Inertia::render('Categories/Index', [
+            'categories' => Category::all()->map(function($category){
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'image' => asset('storage/' .$category->image),
+                ];
+            })
+        ]);
+       // return CategoryResource::collection(Category::all());
 
-        return CategoryResource::collection(Category::all());
+    }
 
-
+    public function create()
+    {
+        return Inertia::render('Categories/Create');
     }
 
     /**
@@ -34,18 +49,31 @@ class CategoryController
 
         $data = $request->validate([
 
-            'name' => ['required', 'string', 'max:250']
+            'name' => ['required', 'string', 'max:250'],
+            'image' => ['image', 'mimes:jpg,png,jpeg']
 
         ]);
 
-        $category = Category::query()->create($data);
+        $image = request()->file('image');
+       /* $imageOriginaleName = $image->getClientOriginalName();
 
+        $path = request()->file('image')->storePubliclyAs('public/images/categories', $imageOriginaleName);
+      */
+        $path = $image->store('categories', 'public');
 
+       Category::query()->create([
+           'name' => $data['name'],
+           'image' => $path
+       ]);
+
+       return redirect()->route('tasks.create');
+
+/*
         return CategoryResource::make(
 
-            $category->fresh()
+             v-if="form.progress"v-if="form.progress"
 
-        );
+        ); */
     }
 
     /**
@@ -62,6 +90,16 @@ class CategoryController
 
     }
 
+    public function edit(Category $category)
+    {
+       $image = $category->image;
+
+       return Inertia::render('Categories/Edit', [
+            'category' => $category,
+            'image' => asset('storage/' .$image)
+       ]);
+    }
+
     /**
      * Update the specified resource in storage.
      *
@@ -69,9 +107,31 @@ class CategoryController
      * @param  \App\Models\Category  $category
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Category $category)
+    public function update(Category $category, Request $request)
     {
-        //
+        $image = $category->image;
+
+        $data = $request->validate([
+
+            'name' => ['required', 'string', 'max:250'],
+            'image' => ['image', 'mimes:jpg,png,jpeg']
+
+        ]);
+
+        if(request()->file('image')){
+
+            Storage::delete('public/' .$category->image);
+
+            $image = request()->file('image')->store('categories', 'public');
+
+        }
+
+       $category->update([
+        'name' => $data['name'],
+        'image' => $image
+       ]);
+
+       return Redirect::route('categories.index');
     }
 
     /**
@@ -82,6 +142,10 @@ class CategoryController
      */
     public function destroy(Category $category)
     {
-        //
+        Storage::delete('public/' .$category->image);
+
+        $category->delete();
+
+        return Redirect::route('categories.index');
     }
 }

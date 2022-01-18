@@ -12,7 +12,7 @@
                         </li>
 
                         <li>
-                            <a class="md:p-4 py-2 block hover:text-purple-600">Personal</a>
+                            <Link href="/categories" class="md:p-4 py-2 block hover:text-purple-600">Categories</Link>
                         </li>
 
                         <li>
@@ -31,4 +31,13 @@
 
 
 <script>
+
+import { Link } from "@inertiajs/inertia-vue3";
+export default {
+
+    components: {
+        Link,
+    }
+
+};
 </script>

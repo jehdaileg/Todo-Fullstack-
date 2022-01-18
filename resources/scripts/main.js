@@ -3,6 +3,10 @@ import { createApp, h } from 'vue';
 import { App as InertiaApp, plugin as InertiaPlugin } from '@inertiajs/inertia-vue3';
 import 'tailwindcss/tailwind.css';
 import AppLayout from "~/Layout/AppLayout.vue";
+import { InertiaProgress } from '@inertiajs/progress';
+import Toast  from "vue-toastification";
+import "vue-toastification/dist/index.css";
+
 
 
 const app = document.getElementById('app');
@@ -32,4 +36,19 @@ createApp({
         }),
 })
     .use(InertiaPlugin)
+    .use(Toast, {
+
+    })
     .mount(app);
+
+
+    InertiaProgress.init({
+
+        color: '#FF0000',
+
+        // Whether to include the default NProgress styles.
+        includeCSS: true,
+
+        // Whether the NProgress spinner will be shown.
+        showSpinner: true,
+      })

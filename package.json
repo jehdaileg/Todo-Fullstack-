@@ -3,7 +3,7 @@
     "devDependencies": {
         "@inertiajs/inertia": "^0.10.0",
         "@inertiajs/inertia-vue3": "^0.5.1",
-        "@inertiajs/progress": "^0.2.6",
+        "@inertiajs/progress": "^0.2.7",
         "@tailwindcss/forms": "^0.4.0",
         "@vitejs/plugin-vue": "^1.9.2",
         "@vue/compiler-sfc": "^3.0.5",
@@ -23,8 +23,13 @@
         "serve": "vite preview"
     },
     "dependencies": {
+        "@heroicons/vue": "^1.0.5",
         "@inertiajs/inertia": "^0.10.1",
         "@inertiajs/inertia-vue3": "^0.5.2",
-        "vue": "^3.2.6"
+        "@kyvg/vue3-notification": "^2.3.4",
+        "@vue-hero-icons/outline": "^1.7.2",
+        "heroicons-vue3": "^1.0.2",
+        "vue": "^3.2.6",
+        "vue-toastification": "^2.0.0-rc.5"
     }
 }

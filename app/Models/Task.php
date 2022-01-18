@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Task extends Model
@@ -27,5 +28,27 @@ class Task extends Model
     public function subTasks()
     {
         return $this->hasMany(Task::class, 'parent_id')->whereNull();
+    }
+
+    public function scopeFilterByCompleted(Builder $q)
+    {
+       return  $q->when(request('completed'), fn (Builder $q) => $q->whereCompleted(), fn (Builder $q) => $q->whereCompleted(false));
+    }
+
+    public function scopeFilterByCategories(Builder $q)
+    {
+        return $q->when(request('categories'), fn (Builder $q) => $q
+        ->whereHas('category', function (Builder $q) {
+            return $q->whereIn('name', explode('+', request('categories')));
+        }));
+    }
+
+    public function scopeFilterByAll(Builder $q)
+    {
+        return $q->when(request('tag'),
+            function() {
+                return $this->newQueryWithoutScopes()->where('completed', true)->orWhere('completed', false);
+            }
+        );
     }
 }
